@@ -58,31 +58,6 @@ function uuid() {
 }
 
 /**
- * @param {HTMLElement} container
- * @param {HTMLElement} element
- * @param {Boolean} [partial]
- */
-function isInView(container, element, partial = false) {
-  const cTop = container.scrollTop;
-  const cBottom = cTop + container.clientHeight;
-  const eTop = element.offsetTop;
-  const eBottom = eTop + element.clientHeight;
-  const isTotal = eTop >= cTop && eBottom <= cBottom;
-  let isPartial;
-
-  if (partial === true) {
-    isPartial = (eTop < cTop && eBottom > cTop) || (eBottom > cBottom && eTop < cBottom);
-  } else if (typeof partial === 'number') {
-    if (eTop < cTop && eBottom > cTop) {
-      isPartial = ((eBottom - cTop) * 100) / element.clientHeight > partial;
-    } else if (eBottom > cBottom && eTop < cBottom) {
-      isPartial = ((cBottom - eTop) * 100) / element.clientHeight > partial;
-    }
-  }
-  return isTotal || isPartial;
-}
-
-/**
  * @type {ListboxMixin}
  * @param {import('@open-wc/dedupe-mixin').Constructor<import('@lion/core').LitElement>} superclass
  */
@@ -714,6 +689,16 @@ const ListboxMixinImplementation = superclass =>
       this._listboxNode.focus();
     }
 
+    /**
+     * @protected
+     * @param {HTMLElement} el element
+     * @param {HTMLElement} [scrollTargetEl] container
+     */
+    // eslint-disable-next-line class-methods-use-this, no-unused-vars
+    _scrollIntoView(el, scrollTargetEl) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
     /** @private */
     __setupEventListeners() {
       this._listboxNode.addEventListener(
@@ -752,9 +737,8 @@ const ListboxMixinImplementation = superclass =>
         return;
       }
       this._activeDescendantOwnerNode.setAttribute('aria-activedescendant', el.id);
-      if (!isInView(this._scrollTargetNode, el)) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
+
+      this._scrollIntoView(el, this._scrollTargetNode);
     }
 
     /**
